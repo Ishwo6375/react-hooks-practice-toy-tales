@@ -6,71 +6,52 @@ import ToyContainer from "./ToyContainer";
 
 function App() {
   const [showForm, setShowForm] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [toys, setToys] = useState([]);
-  const baseURL = "http://localhost:3001/toys";
-
-  useEffect(() => {
-    fetch(baseURL)
-      .then(resp => resp.json())
-      .then(data => {
-        setToys(data)
-        setIsLoaded(true)
-      })
-  }, [])
+  const [toy, setToy] = useState([]);
 
   function handleClick() {
     setShowForm((showForm) => !showForm);
   }
 
-  function handleNewToy(formData) {
-    const configObj = {
-      method: "POST",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    };
-    fetch(baseURL, configObj)
-      .then(resp => resp.json())
-      .then(newToy => {
-        setToys([...toys, newToy])
-      })
+  function handleHide() {
+    setShowForm(false);
   }
 
-  function handleDonation(id) {
-    const configObj = { method: "DELETE" };
-    fetch(`${baseURL}/${id}`, configObj)
-    const updatedToys = toys.filter(toy => toy.id !== id)
-    setToys(updatedToys)
+  useEffect(() => (
+    fetch("http://localhost:3001/toys")
+    .then((response) => response.json())
+    .then((toysData) => setToy(toysData))
+  ), []);
+
+  function handleAddToy(newToy) {
+    const updatedToys = [...toy, newToy];
+    setToy(updatedToys);
   }
 
-  function handleLike(id, numLikes) {
-    const newLikes = numLikes + 1;
-    const configObj = {
-      method: "PATCH",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ likes: newLikes })
-    };
-    fetch(`${baseURL}/${id}`, configObj)
-      .then(resp => resp.json())
-      .then(newToy => {
-        const updatedToys = toys.map(toy => {
-          if (toy.id === id) {
-            return newToy
-          }
-          return toy
-        });
-        setToys(updatedToys)
-      })
+  function handleDeleteToy(id) {
+    const updatedToys = toy.filter((toyList) => toyList.id !== id);
+    setToy(updatedToys);
+  }
+
+  function handleUpdateToy(updatedToy) {
+    const updatedToys = toy.map((toyList) => {
+      if (toyList.id === updatedToy.id) {
+        return updatedToy;
+      } else {
+        return toyList;
+      }
+    });
+    setToy(updatedToys);
   }
 
   return (
     <>
       <Header />
-      {showForm ? <ToyForm handleNewToy={handleNewToy} /> : null}
+      {showForm ? <ToyForm onAddToy={handleAddToy} /> : null}
       <div className="buttonContainer">
         <button onClick={handleClick}>Add a Toy</button>
+        <button onClick={handleHide} >Hide Form</button>
       </div>
-      <ToyContainer toys={toys} isLoaded={isLoaded} handleDonation={handleDonation} handleLike={handleLike} />
+      <ToyContainer toysList={toy} onDeletePlant={handleDeleteToy} onUpdateToy={handleUpdateToy} />
     </>
   );
 }
